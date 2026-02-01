@@ -1,0 +1,113 @@
+{
+  "TranslationProperties": {
+    "Name": "Gravestone",
+    "Description": "A gravestone."
+  },
+  "Id": "Furniture_Gravestone",
+  "PlayerAnimationsId": "Block",
+  "Categories": [
+    "Furniture.Containers"
+  ],
+  "Set": "CustomGraves",
+  "Icon": "Icons/ItemsGenerated/Furniture_Gravestone.png",
+  "IconProperties": {
+    "Scale": 1.1,
+    "Rotation": [
+      0,
+      203,
+      0
+    ],
+    "Translation": [
+      2,
+      -12
+    ]
+  },
+  "BlockType": {
+    "BlockEntity": {
+      "Components": {
+        "GravestoneOwnerData": {},
+        "container": {
+          "ItemContainer": {
+            "Capacity": 64
+          }
+        }
+      }
+    },
+    "BlockParticleSetId": "Stone",
+    "BlockSoundSetId": "Tombstone",
+    "CustomModel": "Items/gravestone/gravestone.blockymodel",
+    "CustomModelTexture": [
+      {
+        "Weight": 1,
+        "Texture": "Items/gravestone/texture.png"
+      }
+    ],
+    "DrawType": "Model",
+    "Flags": {
+      "IsUsable": true
+    },
+    "Gathering": {
+      "Breaking": {
+        "GatherType": "Rocks",
+        "Quantity": 0
+      }
+    },
+    "HitboxType": "Furniture_Gravestone",
+    "Material": "Solid",
+    "Opacity": "Transparent",
+    "ParticleColor": "#797668",
+    "Support": {
+      "Down": [
+        {
+          "FaceType": "Full"
+        }
+      ]
+    },
+    "VariantRotation": "NESW",
+    "Interactions": {
+      "Primary": {
+        "Interactions": [
+          {
+            "Type": "BreakGravestoneInteraction"
+          }
+        ]
+      },
+      "Use": {
+        "Interactions": [
+          {
+            "Type": "UseGravestoneInteraction"
+          }
+        ]
+      }
+    },
+    "PlacementSettings": {
+      "AllowRotationKey": true
+    },
+    "State": {
+      "Id": "container",
+      "Capacity": 63,
+      "Definitions": {
+        "CloseWindow": {
+          "InteractionSoundEventId": "SFX_Chest_Wooden_Close"
+        },
+        "OpenWindow": {
+          "InteractionSoundEventId": "SFX_Chest_Wooden_Open"
+        }
+      }
+    },
+    "SupportDropType": "Destroy"
+  },
+  "Tags": {
+    "Type": [
+      "Rocks",
+      "Gravestone"
+    ],
+    "Family": [
+      "Stone"
+    ]
+  },
+  "ItemSoundSetId": "ISS_Blocks_Stone",
+  "Container": {
+    "Capacity": 63
+  }
+}

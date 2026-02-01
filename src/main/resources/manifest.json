@@ -1,0 +1,19 @@
+{
+  "Group": "mirko0",
+  "Name": "BetterGravestone",
+  "Version": "1.0.0",
+  "Description": "Spawns a gravestone when user dies.",
+  "IncludesAssetPack": true,
+  "Dependencies": {
+    "Hytale:EntityModule": "*",
+    "Hytale:BlockModule": "*"
+  },
+  "Authors": [
+    {
+      "Name": "mirko0"
+    }
+  ],
+  "Website": "https://mcodelogic.com",
+  "Main": "com.mcodelogic.gravestone.KMain",
+  "ServerVersion": "*"
+}
