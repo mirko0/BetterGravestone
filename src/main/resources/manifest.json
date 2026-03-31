@@ -1,7 +1,7 @@
 {
   "Group": "mirko0",
   "Name": "BetterGravestone",
-  "Version": "1.0.0",
+  "Version": "1.3",
   "Description": "Spawns a gravestone when user dies.",
   "IncludesAssetPack": true,
   "Dependencies": {
@@ -15,5 +15,5 @@
   ],
   "Website": "https://mcodelogic.com",
   "Main": "com.mcodelogic.gravestone.KMain",
-  "ServerVersion": "*"
+  "ServerVersion": "2026.03.26-89796e57b"
 }

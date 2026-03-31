@@ -1,6 +1,5 @@
 package com.mcodelogic.gravestone;
 
-import com.hypixel.hytale.assetstore.AssetRegistry;
 import com.hypixel.hytale.component.ComponentRegistry;
 import com.hypixel.hytale.component.ComponentRegistryProxy;
 import com.hypixel.hytale.component.ComponentType;
@@ -21,7 +20,6 @@ import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
@@ -54,17 +52,24 @@ public class KMain extends JavaPlugin {
     protected void setup() {
         super.setup();
         LOGGER.at(Level.INFO).log("Initializing " + Constants.PLUGIN_NAME_FULL + " Plugin...");
-        LOGGER.at(Level.INFO).log("Saving Configuration");
         try {
-            if (!new File(getDataDirectory().resolve("BetterGravestone.json").toUri()).exists()) {
+            if (!new File(getDataDirectory().resolve(Constants.PLUGIN_NAME_FULL + ".json").toUri()).exists()) {
+                LOGGER.at(Level.INFO).log("Creating default configuration");
                 pluginConfiguration.save();
             }
             pluginConfiguration.load();
+
+            if (pluginConfiguration.get().getConfigVersion() == null) {
+                pluginConfiguration.get().setConfigVersion("1.0");
+                pluginConfiguration.get().setIgnoreTime(false);
+                pluginConfiguration.get().setIgnoreTimePermission("gravestone.ignore.time");
+                pluginConfiguration.save();
+            }
+
+            LOGGER.at(Level.INFO).log("Configuration loaded");
         } catch (Exception e) {
             Logger.getLogger(KMain.class.getName()).log(Level.SEVERE, "Error while loading configuration", e);
         }
-/*        AssetRegistry.getAssetStore(Interaction.class)
-                .loadAssets(getName(), List.of(UseGravestoneInteraction.INSTANCE, BreakGravestoneInteraction.INSTANCE));*/
         this.getCodecRegistry(Interaction.CODEC).register("BreakGravestoneInteraction", BreakGravestoneInteraction.class, BreakGravestoneInteraction.CODEC);
         this.getCodecRegistry(Interaction.CODEC).register("UseGravestoneInteraction", UseGravestoneInteraction.class, UseGravestoneInteraction.CODEC);
         this.gravestoneOwnerDataComponentType = this.getChunkStoreRegistry().registerComponent(GravestoneOwnerData.class, "GravestoneOwnerData", GravestoneOwnerData.CODEC);

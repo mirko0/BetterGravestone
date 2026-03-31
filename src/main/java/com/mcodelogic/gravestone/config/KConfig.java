@@ -4,6 +4,7 @@ import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public class KConfig {
@@ -42,7 +43,20 @@ public class KConfig {
             .add()
 
 
+            .append(new KeyedCodec<Boolean>("IgnoreTimeToCollect", Codec.BOOLEAN),
+                    (config, value, extra) -> config.ignoreTime = value,
+                    (config, extra) -> config.ignoreTime)
+            .add()
 
+            .append(new KeyedCodec<String>("IgnoreTimePermission", Codec.STRING),
+                    (config, value, extra) -> config.ignoreTimePermission = value,
+                    (config, extra) -> config.ignoreTimePermission)
+            .add()
+
+            .append(new KeyedCodec<String>("ConfigVersion", Codec.STRING),
+                    (config, value, extra) -> config.configVersion = value,
+                    (config, extra) -> config.configVersion)
+            .add()
 
             .build();
 
@@ -52,12 +66,20 @@ public class KConfig {
     private Integer timeToCollectGrave = 1800;
     private String sendLocationMessage = "<color:red>You have died at</color><color:white>:</color> <color:gray>{x}, {y}, {z}</color><color:white>.</color>";
 
-
     private String messageGravestoneItemsExpired = "<color:red>This gravestone has been placed for a long time</color><color:white>.</color> <color:red>Your items have rotted away</color><color:white>.</color>";
     private String messageNotOwner = "<color:red>You are not the owner of this gravestone</color><color:white>.</color> <color:gray> You can break this gravestone in </color><color:white>{time}</color> <color:gray>seconds</color><color:white>.</color>";
 
+    @Setter
+    private Boolean ignoreTime = false;
+
+    @Setter
+    private String ignoreTimePermission = "gravestone.ignore.time";
+
+    @Setter
+    private String configVersion;
 
     public KConfig() {
     }
+
 
 }

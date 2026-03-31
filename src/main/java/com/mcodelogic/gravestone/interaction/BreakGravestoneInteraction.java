@@ -9,29 +9,26 @@ import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.math.vector.Vector3f;
 import com.hypixel.hytale.math.vector.Vector3i;
 import com.hypixel.hytale.protocol.InteractionType;
-import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.asset.type.model.config.Model;
 import com.hypixel.hytale.server.core.asset.type.model.config.ModelAsset;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.server.core.inventory.InventoryComponent;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
-import com.hypixel.hytale.server.core.inventory.container.SimpleItemContainer;
+import com.hypixel.hytale.server.core.inventory.container.CombinedItemContainer;
 import com.hypixel.hytale.server.core.modules.block.BlockModule;
 import com.hypixel.hytale.server.core.modules.entity.component.BoundingBox;
 import com.hypixel.hytale.server.core.modules.entity.component.ModelComponent;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.CooldownHandler;
-import com.hypixel.hytale.server.core.modules.interaction.interaction.config.Interaction;
-import com.hypixel.hytale.server.core.modules.interaction.interaction.config.RootInteraction;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.client.BreakBlockInteraction;
 import com.hypixel.hytale.server.core.universe.world.World;
-import com.hypixel.hytale.server.core.universe.world.meta.BlockState;
-import com.hypixel.hytale.server.core.universe.world.meta.state.ItemContainerState;
 import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.mcodelogic.gravestone.KMain;
 import com.mcodelogic.gravestone.component.GravestoneOwnerData;
+import com.mcodelogic.gravestone.util.DropGravestone;
 import com.mcodelogic.gravestone.util.TinyMsg;
 import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
 import org.checkerframework.checker.nullness.compatqual.NullableDecl;
@@ -43,24 +40,7 @@ public class BreakGravestoneInteraction extends BreakBlockInteraction {
             BreakBlockInteraction.CODEC
     ).build();
 
-
-/*
-    public static final BreakGravestoneInteraction INSTANCE = new BreakGravestoneInteraction("BreakGravestoneInteraction");
-
-    public static final RootInteraction ROOT = new RootInteraction(INSTANCE.getId(), new String[] { INSTANCE.getId() });
-
-    public BreakGravestoneInteraction() {
-        super();
-    }
-
-    public BreakGravestoneInteraction(String id) {
-        super();
-        super.id = id;
-    }
-*/
-
     @Override
-    @SuppressWarnings("removal")
     protected void interactWithBlock(@NonNullDecl World world, @NonNullDecl CommandBuffer<EntityStore> commandBuffer,
                                      @NonNullDecl InteractionType type, @NonNullDecl InteractionContext context,
                                      @NullableDecl ItemStack heldItemStack, @NonNullDecl Vector3i targetBlock,
@@ -91,16 +71,9 @@ public class BreakGravestoneInteraction extends BreakBlockInteraction {
         Store<ChunkStore> blockStore = blockEntity.getStore();
         try {
             GravestoneOwnerData ownerComponent = blockStore.getComponent(blockEntity, GravestoneOwnerData.getComponentType());
-            BlockState blockState = BlockState.getBlockState(blockEntity, blockStore);
-            SimpleItemContainer container = null;
-            if (blockState != null && blockState instanceof ItemContainerState containerState) {
-                container = (SimpleItemContainer) containerState.getItemContainer();
-            }
             if (ownerComponent == null || ownerComponent.getOwner() == null || ownerComponent.getTimeOfPlacement() == null) {
                 KMain.get().getLogger().atInfo().log("No owner component found at: " + targetBlock.x + ", " + targetBlock.y + ", " + targetBlock.z);
-                if (container != null) {
-                    container.clear();
-                }
+                breakGravestone(world, targetBlock);
                 super.interactWithBlock(world, commandBuffer, type, context, heldItemStack, targetBlock, cooldownHandler);
                 return;
             }
@@ -109,11 +82,16 @@ public class BreakGravestoneInteraction extends BreakBlockInteraction {
             long timeSincePlacement = currentTime - timeOfPlacement;
             int maximumSecondsSincePlacement = KMain.get().getConfiguration().getTimeToCollectGrave();
 
-            if (timeSincePlacement > (maximumSecondsSincePlacement * 1000)) {
+            boolean isExpired = timeSincePlacement > (maximumSecondsSincePlacement * 1000L);
+            String ignoreTimePermission = KMain.get().getConfiguration().getIgnoreTimePermission();
+            boolean ignoreTime = KMain.get().getConfiguration().getIgnoreTime();
+
+            if (isExpired && !player.hasPermission(ignoreTimePermission) && !ignoreTime) {
                 player.sendMessage(TinyMsg.parse(KMain.get().getConfiguration().getMessageGravestoneItemsExpired()));
-                if (container != null) {
-                    container.clear();
+                if (ownerComponent.getItems() != null) {
+                    ownerComponent.getItems().clear();
                 }
+                breakGravestone(world, targetBlock);
                 super.interactWithBlock(world, commandBuffer, type, context, heldItemStack, targetBlock, cooldownHandler);
                 return;
             }
@@ -123,6 +101,10 @@ public class BreakGravestoneInteraction extends BreakBlockInteraction {
                         .replace("{time}", String.valueOf(maximumSecondsSincePlacement - timeSincePlacement / 1000))));
                 return;
             }
+
+            CombinedItemContainer playerInv = InventoryComponent.getCombined(commandBuffer, playerRef, InventoryComponent.EVERYTHING);
+            DropGravestone.dropGravestone(ownerComponent, new Vector3d(targetBlock.x, targetBlock.y, targetBlock.z), playerRef, playerInv, store, world);
+            breakGravestone(world, targetBlock);
             super.interactWithBlock(world, commandBuffer, type, context, heldItemStack, targetBlock, cooldownHandler);
         } catch (Exception e) {
             KMain.get().getLogger().atInfo().log("Error Checking components for gravestone at :  " + targetBlock.x + ", " + targetBlock.y + ", " + targetBlock.z + " - " + e.getMessage());
@@ -130,7 +112,11 @@ public class BreakGravestoneInteraction extends BreakBlockInteraction {
         }
     }
 
-    private void spawnSkeletonOnChance(World world, Vector3i targetBlock) {
+    private void breakGravestone(World world, Vector3i targetBlock) {
+        world.execute(() -> world.breakBlock(targetBlock.x, targetBlock.y, targetBlock.z, 0));
+    }
+
+   /* private void spawnSkeletonOnChance(World world, Vector3i targetBlock) {
         Holder<EntityStore> holder = EntityStore.REGISTRY.newHolder();
         ModelAsset modelAsset = ModelAsset.getAssetMap().getAsset("Zombie");
         Model model = Model.createScaledModel(modelAsset, 1.0f);
@@ -143,5 +129,5 @@ public class BreakGravestoneInteraction extends BreakBlockInteraction {
         holder.addComponent(ModelComponent.getComponentType(), new ModelComponent(model));
         holder.addComponent(BoundingBox.getComponentType(), new BoundingBox(model.getBoundingBox()));
         holder.ensureComponent(UUIDComponent.getComponentType());
-    }
+    }*/
 }
